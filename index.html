@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Learning Notes</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+  #app { display: flex; flex-direction: column; height: 100vh; }
+  header {
+    padding: 12px 22px 0; background: linear-gradient(90deg, #1e293b, #0f172a);
+    border-bottom: 1px solid #334155; flex: 0 0 auto;
+  }
+  header h1 { margin: 0; font-size: 19px; letter-spacing: .3px; }
+  header .meta { margin-top: 4px; font-size: 12.5px; color: #94a3b8; }
+  .tabs { display: flex; gap: 6px; margin-top: 10px; }
+  .tab {
+    background: transparent; border: none; color: #94a3b8; cursor: pointer;
+    padding: 9px 16px; font-size: 14px; border-radius: 8px 8px 0 0; font-weight: 600;
+  }
+  .tab:hover { color: #e2e8f0; }
+  .tab.active { color: #fff; background: #0f172a; border: 1px solid #334155; border-bottom: 1px solid #0f172a; }
+  .panel { flex: 1 1 auto; min-height: 0; }
+  #panel-map { display: block; background: #ffffff; position: relative; }
+  #panel-rag { display: none; overflow-y: auto; background: #0f172a; }
+  svg.markmap { width: 100%; height: 100%; display: block; font-size: 24px; }
+
+  .rag-body { padding: 18px 22px 70px; max-width: 1280px; margin: 0 auto; }
+  .hint { font-size: 12px; color: #64748b; margin: 0 0 12px; }
+  .hint code { background:#1e293b; padding:1px 6px; border-radius:4px; color:#93c5fd; }
+  .diagram-box {
+    background: #0b1220; border: 1px solid #334155; border-radius: 12px;
+    padding: 14px; overflow: auto;
+  }
+  .diagram-box .mermaid { text-align: center; }
+  .legend { display:flex; gap:18px; flex-wrap:wrap; margin:14px 2px 0; font-size:12.5px; color:#cbd5e1; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:12px; height:12px; border-radius:3px; display:inline-block; }
+  .dot.ing{ background:#3b82f6;} .dot.ret{ background:#22c55e;} .dot.cross{ background:#a855f7;}
+
+  .section-title { margin: 28px 2px 6px; font-size: 16px; color:#f1f5f9; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap:14px; margin-top:12px; }
+  .card {
+    background:#1e293b; border:1px solid #334155; border-radius:10px;
+    padding:14px 16px; border-top:4px solid #3b82f6;
+  }
+  .card.ret { border-top-color:#22c55e; }
+  .card.cross { border-top-color:#a855f7; }
+  .card h3 { margin:0 0 10px; font-size:14.5px; color:#f8fafc; }
+  .facet { margin:9px 0; font-size:13px; line-height:1.5; color:#dbe3ee; }
+  .facet .lbl {
+    display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.4px; padding:1px 6px; border-radius:4px; margin-right:6px; vertical-align:1px;
+  }
+  .lbl.purpose{ background:#1e3a8a; color:#bfdbfe;}
+  .lbl.does{ background:#334155; color:#cbd5e1;}
+  .lbl.watch{ background:#78350f; color:#fcd34d;}
+  .lbl.prob{ background:#7f1d1d; color:#fecaca;}
+
+  /* ---- Phone / small screens ---- */
+  @media (max-width: 640px) {
+    header { padding: 10px 14px 0; }
+    header h1 { font-size: 17px; }
+    header .meta { font-size: 11px; line-height: 1.4; }
+    .tabs { margin-top: 8px; }
+    .tab { padding: 8px 12px; font-size: 13px; }
+    .rag-body { padding: 14px 12px 60px; }
+    .cards { grid-template-columns: 1fr; }
+    .section-title { font-size: 15px; }
+    .diagram-box { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🧠 AI Learning Notes</h1>
+    <div class="meta">For: Project Manager learning AI &nbsp;•&nbsp; Started: 2026-05-23 &nbsp;•&nbsp; Last updated: 2026-05-24</div>
+    <div class="tabs">
+      <button class="tab active" data-tab="map">🧠 Mind Map</button>
+      <button class="tab" data-tab="rag">🔄 RAG Process</button>
+    </div>
+  </header>
+
+  <!-- ============================ MIND MAP PANEL ============================ -->
+  <div class="panel" id="panel-map">
+    <svg class="markmap" id="mindmap"></svg>
+  </div>
+
+  <!-- ============================ RAG PROCESS PANEL ============================ -->
+  <div class="panel" id="panel-rag">
+    <div class="rag-body">
+      <p class="hint">Pan/zoom the diagram by scrolling inside it. Each step below is explained as: <code>Purpose</code> · <code>What's usually done</code> · <code>PM watch-outs</code> · <code>Potential problems</code>.</p>
+
+      <div class="diagram-box">
+<pre class="mermaid">
+flowchart TB
+  subgraph ING["&#9881;&#65039; INGESTION — built ahead of time (offline)"]
+    direction LR
+    D["&#128196; 1. Documents"] --> X["&#128269; 2. Extract text"] --> CL["&#129529; 3. Clean"] --> CH["&#9986;&#65039; 4. Chunk"] --> MT["&#127991;&#65039; 5. Metadata"] --> EM["&#129513; 6. Embed chunks"]
+  end
+  EM --> VDB[("&#128451;&#65039; 7. Vector Database")]
+  subgraph RET["&#128270; RETRIEVAL + GENERATION — live (when a user asks)"]
+    direction LR
+    Q["&#10067; 8. User query"] --> QE["&#129513; 9. Embed query"] --> RT["&#128269; 10. Retrieve top-k"] --> RR["&#128202; 11. Rerank (optional)"] --> AUG["&#128206; 12. Augment prompt"] --> GEN["&#129302; 13. LLM generates"] --> ANS["&#9989; 14. Answer + citations"]
+  end
+  VDB ==> RT
+  REIDX["&#9851;&#65039; Re-index when docs change"] -.-> D
+  classDef ing fill:#13315c,stroke:#3b82f6,color:#e6eefc;
+  classDef ret fill:#14532d,stroke:#22c55e,color:#e7f7ec;
+  classDef store fill:#3b1d6e,stroke:#a855f7,color:#f3e8ff;
+  classDef cross fill:#3f2d12,stroke:#f59e0b,color:#fde9c8;
+  class D,X,CL,CH,MT,EM ing;
+  class Q,QE,RT,RR,AUG,GEN,ANS ret;
+  class VDB store;
+  class REIDX cross;
+</pre>
+      </div>
+      <div class="legend">
+        <span><i class="dot ing"></i> Ingestion (offline prep)</span>
+        <span><i class="dot ret"></i> Retrieval + Generation (live)</span>
+        <span><i class="dot cross"></i> Ongoing maintenance</span>
+      </div>
+
+      <!-- ===== INGESTION CARDS ===== -->
+      <h2 class="section-title">⚙️ Ingestion — built ahead of time</h2>
+      <div class="cards">
+
+        <div class="card">
+          <h3>1. Documents (collect sources)</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Gather every source the assistant should be able to answer from.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Connect to SharePoint, Confluence, Drive, databases, ticketing systems; pull the files/records in scope.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Getting access & credentials from other teams is often the slowest part. Agree which sources are in/out of scope up front.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Access delays, surprise formats, huge volume, duplicate or already-outdated documents.</div>
+        </div>
+
+        <div class="card">
+          <h3>2. Extract text (parsing)</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Convert every file into plain text the AI can actually read.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>PDF/Word/HTML parsers; OCR for scans/images; special handling for tables and layout.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Test on your <em>messiest real</em> documents early — this step is routinely underestimated. Budget time for it.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Scrambled tables, OCR errors, lost charts/images, junk from headers & footers.</div>
+        </div>
+
+        <div class="card">
+          <h3>3. Clean</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Remove noise so later search isn't polluted by junk.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Strip boilerplate/repeated headers, fix encoding, drop empty sections, de-duplicate.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Define cleaning rules — don't let it get so aggressive it deletes meaningful content.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Garbage text lowers accuracy; over-cleaning removes useful info.</div>
+        </div>
+
+        <div class="card">
+          <h3>4. Chunk</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Split documents into retrievable, context-sized pieces.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Pick chunk size + overlap; split by section/paragraph (smart) or fixed length (naive).</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>This is the <strong>biggest lever on answer quality</strong>. Expect iteration — there's no single "right" setting.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Too big = noisy answers; too small = lost context; one idea split across chunks.</div>
+        </div>
+
+        <div class="card">
+          <h3>5. Metadata tagging</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Attach labels for filtering, security, and citations.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Tag source, date, version, page, department, and <strong>access permissions</strong>.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Capture permissions <em>during</em> ingestion — this is what enforces who-can-see-what later. Retrofitting is painful.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Missing permissions → confidential leaks; no citations; can't filter by recency/department.</div>
+        </div>
+
+        <div class="card">
+          <h3>6. Embed chunks</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Turn each chunk into a vector that captures its meaning, so it's searchable.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Run all chunks through the chosen embedding model (API or self-hosted).</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Pick the model <strong>early</strong> — switching later means re-embedding everything. Cost scales with volume; check privacy if using an API.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Vendor lock-in, data leaving your network, cost surprises on large sets, slow batch jobs.</div>
+        </div>
+
+        <div class="card">
+          <h3>7. Store / index (vector DB)</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Save vectors + text + metadata so they can be searched in milliseconds.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Load into a vector database (Pinecone, Weaviate, pgvector, Chroma) and build the index.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>DB choice is coupled to the embedding's vector size. Decide cloud vs on-prem (compliance) and watch scaling cost.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Performance/cost growth at volume; index drift if not maintained.</div>
+        </div>
+
+        <div class="card cross">
+          <h3>♻️ Re-indexing (ongoing)</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Keep the knowledge base current as documents change.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Scheduled or event-driven refresh of added/changed/removed docs.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Decide frequency (real-time vs nightly) and <strong>assign an owner</strong> — it's a living pipeline, not one-off.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Stale data → confidently wrong answers; deleted docs still answerable; high refresh cost.</div>
+        </div>
+
+      </div>
+
+      <!-- ===== RETRIEVAL + GENERATION CARDS ===== -->
+      <h2 class="section-title">🔎 Retrieval + Generation — live, when a user asks</h2>
+      <div class="cards">
+
+        <div class="card ret">
+          <h3>8. User query</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Capture what the user actually wants to know.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Receive the question via chat/search UI; optionally rewrite/expand vague queries.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Short/ambiguous questions retrieve poorly — consider guiding users or auto-rewriting.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Ambiguous or multi-part questions; off-topic questions outside the docs.</div>
+        </div>
+
+        <div class="card ret">
+          <h3>9. Embed query</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Convert the question into the same vector space as the chunks.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Embed the query with the <strong>same model</strong> used at ingestion.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Docs and queries must use the identical embedding model — non-negotiable.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Model mismatch → irrelevant results, even if everything else is correct.</div>
+        </div>
+
+        <div class="card ret">
+          <h3>10. Retrieve top-k</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Find the chunks most relevant to the question.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Similarity search in the vector DB returns the top-k chunks; often with metadata filters or hybrid (keyword + semantic) search.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Apply <strong>permission filters here</strong>. Tune k. This step makes or breaks answer quality.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Misses the right doc → wrong answer; pulls irrelevant chunks; permission bypass if filters are wrong.</div>
+        </div>
+
+        <div class="card ret">
+          <h3>11. Rerank (optional)</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Re-sort retrieved chunks so the best ones go first.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>A reranker model re-scores chunk-vs-query relevance; keep the top few.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Often a big quality win, but adds cost & latency — evaluate whether it's needed.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Extra latency/cost; another model dependency; commonly skipped early, then needed later.</div>
+        </div>
+
+        <div class="card ret">
+          <h3>12. Augment prompt</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Combine question + retrieved chunks + instructions into the LLM's input.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Assemble a prompt template that fits the context window and tells the model to "answer only from the provided context."</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Context window limits how much fits; prompt design strongly affects grounding & tone.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Too much context = truncation/cost; weak instructions = hallucination; wrong template = sources ignored.</div>
+        </div>
+
+        <div class="card ret">
+          <h3>13. LLM generates</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Produce the final answer from the provided context.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Send the prompt to an LLM (Claude/GPT/Gemini/etc.); stream the answer back.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Model choice is a cost vs quality vs latency vs privacy trade-off — same buy-vs-host questions as embeddings.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Hallucination despite context; per-call cost; latency; vendor rate limits/outages.</div>
+        </div>
+
+        <div class="card ret">
+          <h3>14. Answer + citations</h3>
+          <div class="facet"><span class="lbl purpose">Purpose</span>Deliver a grounded answer the user can trust and verify.</div>
+          <div class="facet"><span class="lbl does">Usually done</span>Return the answer with source links; handle "I don't know" gracefully; collect user feedback.</div>
+          <div class="facet"><span class="lbl watch">PM watch-outs</span>Citations build trust & enable verification. Define behavior when no good answer exists; add a human-in-the-loop feedback button.</div>
+          <div class="facet"><span class="lbl prob">Problems</span>Wrong/fake citations; over-confident wrong answers; no feedback loop = no improvement over time.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== MIND MAP SOURCE (Markdown) =================== -->
+<!-- Keep every line flush-LEFT. Nest with 2 spaces per level.          -->
+<script type="text/template" id="mm-source">
+# AI Notes (for PMs)
+
+## 🗓️ Session Log
+- 2026-05-23 — Day 1: AI terms, reasoning, RAG, ingestion, embedding models
+- 2026-05-23 — Added RAG process diagram + "what an embedding model is"
+- 2026-05-24 — Vector databases (what it is, options, PM watch-outs)
+
+## 🔤 Core AI Terms
+- **AI** — machines doing human-like intelligence tasks
+- **Machine Learning (ML)** — learns patterns from examples, not fixed rules
+- **Deep Learning** — ML using multi-layer neural networks
+- **Neural Network** — brain-inspired connected "nodes" that learn
+- **LLM** — Large Language Model; trained on huge text (ChatGPT, Claude, Gemini)
+- **Model** — the trained "brain" itself
+- **Prompt** — what you type to the AI
+- **Token** — a text chunk (~¾ of a word); used for limits & pricing
+- **Context window** — how much text the AI can hold in mind at once
+- **Hallucination** — AI confidently saying something false → always verify
+
+## 🤔 AI Reasoning
+- Working through a problem **step by step** before answering
+- Analogy: showing your work in math vs. guessing
+- **Chain of Thought (CoT)** — AI writes out intermediate steps
+- **Reasoning / "thinking" models** — built to think before answering
+- Good for: math, logic, multi-step tasks, self-checking, planning
+- Trade-offs
+  - Slower
+  - Costs more (more compute)
+  - Overkill for simple questions
+
+## 📚 RAG — Retrieval-Augmented Generation
+- **What** — AI answers using YOUR documents, not just its training
+- **Analogy** — an open-book exam (look up the page, then answer)
+- **Why use it**
+  - Plain LLM doesn't know your internal data
+  - Fine-tuning is expensive, slow, goes stale
+  - RAG looks up relevant docs at question time
+- **Reduces (not eliminates) hallucination**
+- See the "RAG Process" tab for the full step-by-step diagram
+
+### ⚙️ Phase 1 — Ingestion (prep, done ahead of time)
+- 1. Load / collect documents (PDF, Word, wiki, etc.)
+- 2. Parse / extract text (OCR; tables hard)
+- 3. Clean (remove junk)
+- 4. Chunking (size, overlap, smart vs naive)
+- 5. Metadata (permissions!, citations)
+- 6. Embedding (chunks → vectors)
+- 7. Store / index in vector database
+- ♻️ Re-indexing — living pipeline, not one-off
+
+### 🔎 Phase 2 — Retrieval + Generation (live)
+- Query → Embed query → Retrieve top-k → Rerank → Augment → Generate → Answer + citations
+
+## 🧩 Embedding Model
+- **What it is** — an AI model that turns text into a *vector* (a list of numbers capturing meaning)
+  - Different job from the LLM: embedding = "understand & find" (the librarian); LLM = "write the answer"
+  - Similar meaning → similar numbers → that's what makes "search by meaning" work
+  - Example: "annual leave policy" → [0.02, -0.88, 0.43, ...]
+  - The numbers themselves aren't human-readable; they're only for the computer to compare
+- **Build vs Evaluate?** → ✅ Evaluate & select (❌ don't build — only big labs build them)
+- API/hosted: OpenAI, Cohere, Google, Voyage, Azure
+- Open-source/self-hosted: BGE, E5, GTE, Nomic, sentence-transformers
+- Thousands exist; ~a dozen production-worthy (MTEB = leaderboard)
+- Criteria: quality, cost, privacy, language, speed, dimension
+- ⚠️ Gotchas
+  - Same model for docs AND queries
+  - Switching later = re-embed EVERYTHING → choose early
+  - Coupled with the vector database
+
+## 🗄️ Vector Database
+- **What it is** — a database built to store vectors and search them by *similarity* (meaning), fast
+  - Normal DB finds exact matches; a vector DB finds "closest in meaning"
+  - Uses ANN (approximate nearest neighbour) to stay fast over millions of chunks
+- **Stores** — the vector + the original text chunk + metadata (source, date, permissions)
+- **Build vs Buy?** → ✅ Pick an existing one (❌ don't build)
+- Options
+  - Managed / cloud: Pinecone
+  - Open-source (self-host or cloud): Weaviate, Milvus, Qdrant, Chroma
+  - Add-on to a DB you already have: pgvector (Postgres), OpenSearch / Elasticsearch, Redis
+- Criteria: scale, speed, cost, hosting (cloud vs on-prem), metadata filtering, ease of ops
+- ⚠️ Watch-outs
+  - Coupled to the embedding model's dimension (change one → affects the other)
+  - Permission filtering must happen at search time (security)
+  - Cost & performance grow with data volume
+  - Already on Postgres? pgvector may be enough — don't over-buy
+
+## 📋 PM Planning & Risks
+- Evaluation plan (measure answer quality)
+- Data access & permissions
+- Data freshness / re-indexing
+- Cost per query at scale
+- Latency
+- Privacy / compliance
+- Human-in-the-loop feedback
+
+## 🔜 To Learn Next
+- Chunking strategies (deep dive)
+- Retrieval quality / reranking / hybrid search
+- Vector DB tuning (indexes, ANN parameters)
+</script>
+
+<!-- Mind map libraries (need internet on first open). Bare URLs resolve to browser builds. -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.18"></script>
+<script>
+  // Build and center the mind map ourselves so we can re-fit on load / resize / tab switch.
+  (function () {
+    const { Markmap, Transformer } = window.markmap;
+    const md = document.getElementById('mm-source').textContent;
+    const { root } = new Transformer().transform(md);
+    const svg = document.getElementById('mindmap');
+    const mm = Markmap.create(svg, {
+      initialExpandLevel: 3,
+      colorFreezeLevel: 2,
+      spacingVertical: 10,
+      spacingHorizontal: 90,
+      paddingX: 28,
+      fitRatio: 0.92,
+    }, root);
+    window.__mm = mm;
+    const refit = () => { try { mm.fit(); } catch (e) {} };
+    // fit once layout settles, and again on resize
+    setTimeout(refit, 50);
+    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(refit, 150); });
+  })();
+</script>
+
+<!-- Diagram library + tab switching -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: false, theme: 'dark', securityLevel: 'loose',
+    themeVariables: { fontSize: '24px' },
+    flowchart: { curve: 'basis', padding: 16 },
+  });
+
+  let ragRendered = false;
+  const tabs = document.querySelectorAll('.tab');
+  const panelMap = document.getElementById('panel-map');
+  const panelRag = document.getElementById('panel-rag');
+  tabs.forEach(tab => tab.addEventListener('click', async () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const which = tab.dataset.tab;
+    panelMap.style.display = (which === 'map') ? 'block' : 'none';
+    panelRag.style.display = (which === 'rag') ? 'block' : 'none';
+    if (which === 'map' && window.__mm) {
+      // re-center in case the window changed size while on the other tab
+      setTimeout(() => { try { window.__mm.fit(); } catch (e) {} }, 30);
+    }
+    if (which === 'rag' && !ragRendered) {
+      await mermaid.run({ querySelector: '.mermaid' });
+      ragRendered = true;
+    }
+  }));
+</script>
+</body>
+</html>

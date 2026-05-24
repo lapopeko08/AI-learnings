@@ -4,75 +4,108 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AI Learning Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  :root{
+    --bg:#fdf3e7; --ink:#111111;
+    --yellow:#ffd23f; --pink:#ff4f9a; --cyan:#37d5d6; --lime:#b8ff3f;
+    --orange:#ff7a1a; --purple:#9b5cff; --red:#ff5252; --blue:#3a86ff;
+    --shadow:6px 6px 0 var(--ink); --border:3px solid var(--ink);
+    --font-display:'Archivo Black', system-ui, sans-serif;
+    --font-mono:'Space Mono', ui-monospace, monospace;
+    --font-body:'DM Sans', system-ui, sans-serif;
+  }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0; padding: 0; height: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #0f172a; color: #e2e8f0;
+    margin:0; padding:0; height:100%;
+    font-family:var(--font-body);
+    background:var(--bg); color:var(--ink);
   }
-  #app { display: flex; flex-direction: column; height: 100vh; }
-  header {
-    padding: 12px 22px 0; background: linear-gradient(90deg, #1e293b, #0f172a);
-    border-bottom: 1px solid #334155; flex: 0 0 auto;
-  }
-  header h1 { margin: 0; font-size: 19px; letter-spacing: .3px; }
-  header .meta { margin-top: 4px; font-size: 12.5px; color: #94a3b8; }
-  .tabs { display: flex; gap: 6px; margin-top: 10px; }
+  #app { display:flex; flex-direction:column; height:100vh; }
+
+  header { padding:14px 18px 0; background:var(--yellow); border-bottom:5px solid var(--ink); flex:0 0 auto; }
+  header h1 { margin:0; font-family:var(--font-display); font-size:24px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink); }
+  header .meta { margin-top:6px; font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--ink); }
+  .tabs { display:flex; gap:10px; margin-top:14px; padding-bottom:14px; }
   .tab {
-    background: transparent; border: none; color: #94a3b8; cursor: pointer;
-    padding: 9px 16px; font-size: 14px; border-radius: 8px 8px 0 0; font-weight: 600;
+    background:#fff; border:3px solid var(--ink); color:var(--ink); cursor:pointer;
+    padding:10px 16px; font-family:var(--font-display); font-size:13px; text-transform:uppercase;
+    letter-spacing:.5px; border-radius:0; box-shadow:4px 4px 0 var(--ink);
+    transition:transform .06s ease, box-shadow .06s ease;
   }
-  .tab:hover { color: #e2e8f0; }
-  .tab.active { color: #fff; background: #0f172a; border: 1px solid #334155; border-bottom: 1px solid #0f172a; }
-  .panel { flex: 1 1 auto; min-height: 0; }
-  #panel-map { display: block; background: #ffffff; position: relative; }
-  #panel-rag { display: none; overflow-y: auto; background: #0f172a; }
-  svg.markmap { width: 100%; height: 100%; display: block; font-size: 24px; }
+  .tab:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--ink); }
+  .tab.active { background:var(--pink); color:#fff; transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
 
-  .rag-body { padding: 18px 22px 70px; max-width: 1280px; margin: 0 auto; }
-  .hint { font-size: 12px; color: #64748b; margin: 0 0 12px; }
-  .hint code { background:#1e293b; padding:1px 6px; border-radius:4px; color:#93c5fd; }
-  .diagram-box {
-    background: #0b1220; border: 1px solid #334155; border-radius: 12px;
-    padding: 14px; overflow: auto;
+  .panel { flex:1 1 auto; min-height:0; }
+  #panel-map { display:block; background:var(--bg); position:relative; }
+  #panel-rag { display:none; overflow-y:auto; background:var(--bg); }
+  svg.markmap { width:100%; height:100%; display:block; font-size:24px; }
+  svg.markmap .markmap-foreign { font-family:var(--font-body); font-weight:700; }
+  svg.markmap .markmap-foreign, svg.markmap .markmap-foreign * { color:var(--ink) !important; }
+  svg.markmap .markmap-link { stroke-width:3px !important; }
+  svg.markmap circle { stroke:var(--ink); stroke-width:2.5px; }
+
+  .rag-body { padding:22px 22px 80px; max-width:1200px; margin:0 auto; }
+  .hint {
+    font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--ink);
+    margin:0 0 18px; background:var(--cyan); border:3px solid var(--ink); box-shadow:var(--shadow); padding:10px 12px;
   }
-  .diagram-box .mermaid { text-align: center; }
-  .legend { display:flex; gap:18px; flex-wrap:wrap; margin:14px 2px 0; font-size:12.5px; color:#cbd5e1; }
-  .legend span { display:inline-flex; align-items:center; gap:6px; }
-  .dot { width:12px; height:12px; border-radius:3px; display:inline-block; }
-  .dot.ing{ background:#3b82f6;} .dot.ret{ background:#22c55e;} .dot.cross{ background:#a855f7;}
+  .hint code { background:var(--ink); color:#fff; padding:1px 6px; border-radius:0; font-family:var(--font-mono); }
+  .diagram-box { background:#fff; border:4px solid var(--ink); border-radius:0; box-shadow:var(--shadow); padding:16px; overflow:auto; }
+  .diagram-box .mermaid { text-align:center; }
+  .diagram-box .mermaid .flowchart-link, .diagram-box .mermaid .edgePath path { stroke-width:3px !important; }
+  .diagram-box .mermaid .node rect, .diagram-box .mermaid .node circle,
+  .diagram-box .mermaid .node polygon, .diagram-box .mermaid .cluster rect { stroke-width:3px !important; }
 
-  .section-title { margin: 28px 2px 6px; font-size: 16px; color:#f1f5f9; }
-  .cards { display:grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap:14px; margin-top:12px; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin:18px 2px 0; font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--ink); }
+  .legend span { display:inline-flex; align-items:center; gap:8px; background:#fff; border:3px solid var(--ink); padding:6px 10px; box-shadow:3px 3px 0 var(--ink); }
+  .dot { width:16px; height:16px; border-radius:0; display:inline-block; border:2px solid var(--ink); }
+  .dot.ing{ background:var(--yellow);} .dot.ret{ background:var(--lime);} .dot.cross{ background:var(--cyan);}
+
+  .section-title {
+    margin:34px 0 12px; font-family:var(--font-display); font-size:20px; text-transform:uppercase; letter-spacing:.5px;
+    color:var(--ink); background:var(--lime); border:3px solid var(--ink); box-shadow:var(--shadow); padding:8px 14px; display:inline-block;
+  }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(330px,1fr)); gap:20px; margin-top:18px; }
   .card {
-    background:#1e293b; border:1px solid #334155; border-radius:10px;
-    padding:14px 16px; border-top:4px solid #3b82f6;
+    background:#fff; border:3px solid var(--ink); border-radius:0; box-shadow:6px 6px 0 var(--blue); padding:16px 18px;
+    transition:transform .06s ease, box-shadow .06s ease;
   }
-  .card.ret { border-top-color:#22c55e; }
-  .card.cross { border-top-color:#a855f7; }
-  .card h3 { margin:0 0 10px; font-size:14.5px; color:#f8fafc; }
-  .facet { margin:9px 0; font-size:13px; line-height:1.5; color:#dbe3ee; }
+  .card:hover { transform:translate(-2px,-2px); box-shadow:9px 9px 0 var(--blue); }
+  .card.ret { box-shadow:6px 6px 0 var(--lime); }
+  .card.ret:hover { box-shadow:9px 9px 0 var(--lime); }
+  .card.cross { box-shadow:6px 6px 0 var(--purple); }
+  .card.cross:hover { box-shadow:9px 9px 0 var(--purple); }
+  .card h3 {
+    margin:0 0 12px; font-family:var(--font-display); font-size:14px; text-transform:uppercase; letter-spacing:.3px;
+    color:var(--ink); background:var(--yellow); border:2px solid var(--ink); display:inline-block; padding:5px 9px;
+  }
+  .card.ret h3 { background:var(--lime); }
+  .card.cross h3 { background:var(--cyan); }
+  .facet { margin:10px 0; font-family:var(--font-body); font-size:13.5px; line-height:1.55; color:var(--ink); }
   .facet .lbl {
-    display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase;
-    letter-spacing:.4px; padding:1px 6px; border-radius:4px; margin-right:6px; vertical-align:1px;
+    display:inline-block; font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.5px; padding:2px 7px; margin-right:7px; border:2px solid var(--ink); border-radius:0;
   }
-  .lbl.purpose{ background:#1e3a8a; color:#bfdbfe;}
-  .lbl.does{ background:#334155; color:#cbd5e1;}
-  .lbl.watch{ background:#78350f; color:#fcd34d;}
-  .lbl.prob{ background:#7f1d1d; color:#fecaca;}
+  .lbl.purpose{ background:var(--cyan); color:var(--ink);}
+  .lbl.does{ background:#fff; color:var(--ink);}
+  .lbl.watch{ background:var(--yellow); color:var(--ink);}
+  .lbl.prob{ background:var(--pink); color:#fff;}
 
   /* ---- Phone / small screens ---- */
   @media (max-width: 640px) {
-    header { padding: 10px 14px 0; }
-    header h1 { font-size: 17px; }
-    header .meta { font-size: 11px; line-height: 1.4; }
-    .tabs { margin-top: 8px; }
-    .tab { padding: 8px 12px; font-size: 13px; }
-    .rag-body { padding: 14px 12px 60px; }
-    .cards { grid-template-columns: 1fr; }
-    .section-title { font-size: 15px; }
-    .diagram-box { padding: 8px; }
+    header { padding:12px 14px 0; }
+    header h1 { font-size:19px; }
+    header .meta { font-size:11px; line-height:1.5; }
+    .tabs { margin-top:12px; gap:8px; }
+    .tab { padding:8px 12px; font-size:12px; box-shadow:3px 3px 0 var(--ink); }
+    .tab.active { box-shadow:1px 1px 0 var(--ink); }
+    .rag-body { padding:16px 12px 70px; }
+    .cards { grid-template-columns:1fr; gap:16px; }
+    .section-title { font-size:16px; }
+    .diagram-box { padding:10px; }
   }
 </style>
 </head>
@@ -111,10 +144,10 @@ flowchart TB
   end
   VDB ==> RT
   REIDX["&#9851;&#65039; Re-index when docs change"] -.-> D
-  classDef ing fill:#13315c,stroke:#3b82f6,color:#e6eefc;
-  classDef ret fill:#14532d,stroke:#22c55e,color:#e7f7ec;
-  classDef store fill:#3b1d6e,stroke:#a855f7,color:#f3e8ff;
-  classDef cross fill:#3f2d12,stroke:#f59e0b,color:#fde9c8;
+  classDef ing fill:#ffd23f,stroke:#111111,stroke-width:3px,color:#111111;
+  classDef ret fill:#b8ff3f,stroke:#111111,stroke-width:3px,color:#111111;
+  classDef store fill:#ff4f9a,stroke:#111111,stroke-width:3px,color:#111111;
+  classDef cross fill:#37d5d6,stroke:#111111,stroke-width:3px,color:#111111;
   class D,X,CL,CH,MT,EM ing;
   class Q,QE,RT,RR,AUG,GEN,ANS ret;
   class VDB store;
@@ -271,6 +304,7 @@ flowchart TB
 - 2026-05-23 — Day 1: AI terms, reasoning, RAG, ingestion, embedding models
 - 2026-05-23 — Added RAG process diagram + "what an embedding model is"
 - 2026-05-24 — Vector databases (what it is, options, PM watch-outs)
+- 2026-05-24 — Published online (GitHub Pages) + Neobrutalism theme
 
 ## 🔤 Core AI Terms
 - **AI** — machines doing human-like intelligence tasks
@@ -377,13 +411,25 @@ flowchart TB
     const md = document.getElementById('mm-source').textContent;
     const { root } = new Transformer().transform(md);
     const svg = document.getElementById('mindmap');
+    // Neobrutalist clashing palette for branches
+    const NB = ['#ff4f9a','#37d5d6','#ffd23f','#9b5cff','#ff7a1a','#3a86ff','#b8ff3f','#ff5252'];
+    const nbColor = (node) => {
+      try {
+        const path = (node && node.state && node.state.path) ? String(node.state.path) : '';
+        const seg = path.split('.')[1] || path.split('.')[0] || '0';
+        let n = parseInt(seg, 10);
+        if (isNaN(n)) n = (node && node.content) ? node.content.length : 0;
+        return NB[Math.abs(n) % NB.length];
+      } catch (e) { return '#111111'; }
+    };
     const mm = Markmap.create(svg, {
       initialExpandLevel: 3,
       colorFreezeLevel: 2,
-      spacingVertical: 10,
+      spacingVertical: 12,
       spacingHorizontal: 90,
       paddingX: 28,
       fitRatio: 0.92,
+      color: nbColor,
     }, root);
     window.__mm = mm;
     const refit = () => { try { mm.fit(); } catch (e) {} };
@@ -397,9 +443,14 @@ flowchart TB
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
   mermaid.initialize({
-    startOnLoad: false, theme: 'dark', securityLevel: 'loose',
-    themeVariables: { fontSize: '24px' },
-    flowchart: { curve: 'basis', padding: 16 },
+    startOnLoad: false, theme: 'base', securityLevel: 'loose',
+    themeVariables: {
+      fontFamily: 'Space Mono, monospace', fontSize: '20px',
+      lineColor: '#111111', primaryColor: '#ffd23f',
+      primaryBorderColor: '#111111', primaryTextColor: '#111111',
+      clusterBkg: '#ffffff', clusterBorder: '#111111', tertiaryColor: '#ffffff',
+    },
+    flowchart: { curve: 'linear', padding: 18, nodeSpacing: 55, rankSpacing: 60 },
   });
 
   let ragRendered = false;
